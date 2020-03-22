@@ -1,3 +1,5 @@
+library(VIM)
+
 # Load .RData files
 load("TCGA-ACC.RData", env <- new.env())
 load("TCGA-BLCA.RData", env2 <- new.env())
@@ -34,7 +36,7 @@ load("TCGA-UCS.RData", env32 <- new.env())
 load("TCGA-UVM.RData", env33 <- new.env())
 
 # Get clinical data 
-ls.str(env$TCGA$clinical) 
+#ls.str(env$TCGA$clinical) 
 clinical_list <- env$TCGA$clinical
 clinical_list2 <- env2$TCGA$clinical
 clinical_list3 <- env3$TCGA$clinical
@@ -69,16 +71,17 @@ clinical_list31 <- env31$TCGA$clinical
 clinical_list32 <- env32$TCGA$clinical
 clinical_list33 <- env33$TCGA$clinical
 
+
 # Bind the rows of different clinical data
-try_list <- dplyr::bind_rows(clinical_list, 
-                  clinical_list2, 
-                  clinical_list3, 
-                  clinical_list4, 
-                  clinical_list5, 
-                  clinical_list6, 
-                  clinical_list7, 
-                  clinical_list8, 
-                  clinical_list9, 
+merged_clinical_list <- dplyr::bind_rows(clinical_list,
+                  clinical_list2,
+                  clinical_list3,
+                  clinical_list4,
+                  clinical_list5,
+                  clinical_list6,
+                  clinical_list7,
+                  clinical_list8,
+                  clinical_list9,
                   clinical_list10,
                   clinical_list11,
                   clinical_list12,
@@ -104,11 +107,41 @@ try_list <- dplyr::bind_rows(clinical_list,
                   clinical_list32,
                   clinical_list33)
 
-summary(try_list)
+summary(merged_clinical_list)
 
+# Eliminate certain columns which appear only in one data set
+eliminated_clinical_list <- merged_clinical_list[ , -which(names(merged_clinical_list) %in% c("days_to_last_known_alive",
+                                                                                              "clinical_stage",
+                                                                                              "clinical_T",
+                                                                                              "clinical_N",
+                                                                                              "clinical_M",
+                                                                                              "er_status_by_ihc",
+                                                                                              "her2_status_by_ihc", 
+                                                                                              "pr_status_by_ihc", 
+                                                                                              "gleason_score"))]
 
+# Eliminate rows with na values in certain columns
+complete_clinical_list <- complete.cases(eliminated_clinical_list[, c("days_to_birth", 
+                                                                      "age_at_initial_pathologic_diagnosis",
+                                                                      "gender",
+                                                                      "vital_status")])
+eliminated_clinical_list <- eliminated_clinical_list[complete_clinical_list, ]
 
+# Imputation
+eliminated_clinical_list_imputed <- kNN(eliminated_clinical_list)
+eliminated_clinical_list_imputed <- eliminated_clinical_list_imputed[ , -which(names(eliminated_clinical_list_imputed) %in% c("days_to_birth_imp",
+                                                                                                                              "age_at_initial_pathologic_diagnosis_imp",
+                                                                                                                              "gender_imp",
+                                                                                                                              "vital_status_imp",
+                                                                                                                              "days_to_death_imp",
+                                                                                                                              "days_to_last_followup_imp",
+                                                                                                                              "histological_type_imp", 
+                                                                                                                              "neoplasm_histologic_grade_imp", 
+                                                                                                                              "pathologic_stage_imp",
+                                                                                                                              "pathologic_T_imp",
+                                                                                                                              "pathologic_N_imp",
+                                                                                                                              "pathologic_M_imp"))]
 
+summary(eliminated_clinical_list_imputed)
 
-
-
+write.table(as.data.frame(eliminated_clinical_list_imputed),file="clinical.csv", quote=F,sep=",",row.names=F)
