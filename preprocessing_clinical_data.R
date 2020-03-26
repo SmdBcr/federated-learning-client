@@ -120,6 +120,12 @@ eliminated_clinical_list <- merged_clinical_list[ , -which(names(merged_clinical
                                                                                               "pr_status_by_ihc", 
                                                                                               "gleason_score"))]
 
+# Creation of the dataset without excluding certain columns except common ones
+not_eliminated_clinical_list <- merged_clinical_list[ , -which(names(merged_clinical_list) %in% c("er_status_by_ihc",
+                                                                                            "her2_status_by_ihc", 
+                                                                                            "pr_status_by_ihc", 
+                                                                                            "gleason_score"))]
+
 # Eliminate rows with na values in certain columns
 complete_clinical_list <- complete.cases(eliminated_clinical_list[, c("days_to_birth", 
                                                                       "age_at_initial_pathologic_diagnosis",
@@ -142,6 +148,27 @@ eliminated_clinical_list_imputed <- eliminated_clinical_list_imputed[ , -which(n
                                                                                                                               "pathologic_N_imp",
                                                                                                                               "pathologic_M_imp"))]
 
+not_eliminated_clinical_list_imputed <- kNN(not_eliminated_clinical_list)
+not_eliminated_clinical_list_imputed <- not_eliminated_clinical_list_imputed[ , -which(names(not_eliminated_clinical_list_imputed) %in% c("days_to_birth_imp",
+                                                                                                                                          "age_at_initial_pathologic_diagnosis_imp",
+                                                                                                                                          "gender_imp",
+                                                                                                                                          "vital_status_imp",
+                                                                                                                                          "days_to_death_imp",
+                                                                                                                                          "days_to_last_followup_imp",
+                                                                                                                                          "days_to_last_known_alive_imp",
+                                                                                                                                          "histological_type_imp", 
+                                                                                                                                          "neoplasm_histologic_grade_imp", 
+                                                                                                                                          "clinical_stage_imp",
+                                                                                                                                          "clinical_T_imp",
+                                                                                                                                          "clinical_N_imp",
+                                                                                                                                          "clinical_M_imp",
+                                                                                                                                          "pathologic_stage_imp",
+                                                                                                                                          "pathologic_T_imp",
+                                                                                                                                          "pathologic_N_imp",
+                                                                                                                                          "pathologic_M_imp"))]
+
 summary(eliminated_clinical_list_imputed)
+summary(not_eliminated_clinical_list_imputed)
 
 write.table(as.data.frame(eliminated_clinical_list_imputed),file="clinical.csv", quote=F,sep=",",row.names=F)
+write.table(as.data.frame(not_eliminated_clinical_list_imputed),file="clinical2.csv", quote=F,sep=",",row.names=F)
